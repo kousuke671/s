@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英語単語穴埋めテスト（4択＆記述）</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; padding: 15px; max-width: 600px; margin: 0 auto; color: #333; background-color: #f0f2f5; }
+  h2 { color: #1a365d; text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+  .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
+  
+  /* アカウントヘッダー */
+  .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e2e8f0; padding: 8px 15px; border-radius: 8px; font-size: 0.9em; font-weight: bold; margin-bottom: 15px; }
+  .logout-btn { background: #64748b; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+  
+  /* 問題ヘッダー・バッジ */
+  .meta-info { display: flex; justify-content: space-between; align-items: center; color: #666; font-size: 0.85em; margin-bottom: 10px; font-weight: bold; }
+  .type-badge { padding: 3px 8px; border-radius: 4px; color: white; font-size: 0.8em; font-weight: bold; }
+  .badge-mcq { background-color: #0284c7; }
+  .badge-text { background-color: #d97706; }
+
+  /* 問題文 */
+  .question-text { font-size: 1.15em; font-weight: 600; line-height: 1.5; margin-bottom: 20px; color: #1e293b; }
+  
+  /* 4択ボタン */
+  .options-grid { display: grid; gap: 10px; margin-bottom: 15px; }
+  .option-btn { padding: 12px 15px; font-size: 1em; text-align: left; background-color: #f8fafc; border: 2px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: all 0.2s; color: #334155; font-weight: 500; }
+  .option-btn:hover { background-color: #e2e8f0; }
+  .option-btn:disabled { cursor: default; }
+
+  /* 記述式入力エリア */
+  .text-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+  .text-input { flex: 1; padding: 12px; font-size: 1em; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; }
+  .text-input:focus { border-color: #2563eb; }
+  .submit-btn { padding: 12px 20px; font-size: 1em; font-weight: bold; background-color: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; }
+  .submit-btn:disabled { background-color: #94a3b8; cursor: default; }
+
+  /* 判定結果 */
+  .result-box { margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95em; }
+  .correct-res { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+  .incorrect-res { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .meaning-text { font-size: 0.9em; color: #4b5563; margin-top: 6px; font-weight: normal; }
+
+  /* メインボタン */
+  .main-btn { width: 100%; padding: 14px; font-size: 1em; font-weight: bold; color: white; background-color: #2563eb; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+  .main-btn:hover { background-color: #1d4ed8; }
+  .review-btn { background-color: #dc2626; }
+  .review-btn:hover { background-color: #b91c1c; }
+  .review-btn:disabled { background-color: #fca5a5; cursor: not-allowed; }
+
+  /* アカウント管理画面 */
+  .input-group { margin-bottom: 15px; }
+  .input-group input { width: 100%; padding: 12px; box-sizing: border-box; font-size: 1em; border: 2px solid #cbd5e1; border-radius: 8px; }
+  .user-list { margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+  .user-chip { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 16px; margin: 4px; cursor: pointer; font-size: 0.9em; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h2>英単語 テスト（4択＆記述）</h2>
+
+<div id="app"></div>
+
+<script>
+// 全74問のデータベース
+const allQuestions = [
+  { id: 1, q: "mysteries in (  )", options: ["astronomy", "geology", "biology", "physics"], correct: "astronomy", m: "天文学における謎" },
+  { id: 2, q: "The (  ) dug up an ancient pot.", options: ["archaeologist", "architect", "astronomer", "ancestor"], correct: "archaeologist", m: "その考古学者が古代のつぼを掘り出した。" },
+  { id: 3, q: "work on my graduation (  )", options: ["thesis", "theme", "theory", "title"], correct: "thesis", m: "卒業論文に取り組む" },
+  { id: 4, q: "live in a (  )", options: ["dormitory", "domestic", "donation", "document"], correct: "dormitory", m: "寮生活をする" },
+  { id: 5, q: "(  ) the meaning of life", options: ["grasp", "grant", "grave", "greed"], correct: "grasp", m: "人生の意味を理解する" },
+  { id: 6, q: "(  ) customers' needs", options: ["anticipate", "participate", "appreciate", "apologize"], correct: "anticipate", m: "顧客の要求を予想する" },
+  { id: 7, q: "No one can (  ) the future.", options: ["foresee", "forget", "forgive", "forbid"], correct: "foresee", m: "誰にも未来を予知することはできない。" },
+  { id: 8, q: "(  ) the meaning from the context", options: ["infer", "refer", "prefer", "confer"], correct: "infer", m: "文脈から意味を推測する" },
+  { id: 9, q: "What do you (  ) from these figures?", options: ["deduce", "reduce", "produce", "induce"], correct: "deduce", m: "これらの数字から何を推測しますか。" },
+  { id: 10, q: "This area is (  ) unsafe.", options: ["deemed", "denied", "delayed", "demanded"], correct: "deemed", m: "この地域は治安が悪いと思われている。" },
+  { id: 11, q: "(  ) ways to bring more tourists to the town", options: ["Ponder", "Prefer", "Propose", "Provide"], correct: "Ponder", m: "より多くの観光客を町に招致する方法を熟考する" },
+  { id: 12, q: "The sunset was quite a (  ).", options: ["spectacle", "species", "specimen", "spectrum"], correct: "spectacle", m: "夕日は実に素晴らしい眺めだった。" },
+  { id: 13, q: "at an (  ) of 10,000 meters", options: ["altitude", "attitude", "aptitude", "amplitude"], correct: "altitude", m: "高度10,000メートルで" },
+  { id: 14, q: "natural (  ) such as earthquakes, floods, and droughts", options: ["catastrophes", "categories", "catalogs", "capacities"], correct: "catastrophes", m: "地震、洪水、干ばつのような自然の大災害" },
+  { id: 15, q: "Hokkaido's (  )", options: ["wilderness", "wisdom", "witness", "welfare"], correct: "wilderness", m: "北海道の原野" },
+  { id: 16, q: "develop tooth (  )", options: ["decay", "delay", "decline", "defeat"], correct: "decay", m: "虫歯（歯の腐敗）になる" },
+  { id: 17, q: "the (  ) of the coastline", options: ["erosion", "emotion", "emission", "era"], correct: "erosion", m: "その海岸線の浸食" },
+  { id: 18, q: "a candle (  )", options: ["flame", "frame", "flavor", "flash"], correct: "flame", m: "ろうそくの火" },
+  { id: 19, q: "the Andromeda (  )", options: ["Galaxy", "Gravity", "Globe", "Glory"], correct: "Galaxy", m: "アンドロメダ銀河" },
+  { id: 20, q: "I got a (  ) from standing outside.", options: ["chill", "charm", "charge", "cheer"], correct: "chill", m: "外に立っていたので、冷えた。" },
+  { id: 21, q: "(  ) energy", options: ["thermal", "threat", "thorough", "theme"], correct: "thermal", m: "熱エネルギー" },
+  { id: 22, q: "(  ) soil", options: ["fertile", "futile", "fragile", "fatal"], correct: "fertile", m: "肥沃な土壌" },
+  { id: 23, q: "We have nine years of (  ) education in Japan.", options: ["compulsory", "complex", "comprehensive", "competitive"], correct: "compulsory", m: "日本では義務教育は9年間だ。" },
+  { id: 24, q: "(  ) my stress", options: ["relieve", "release", "remove", "replace"], correct: "relieve", m: "ストレスを発散させる" },
+  { id: 25, q: "(  ) the fat off the meat", options: ["trim", "trap", "track", "treat"], correct: "trim", m: "肉から脂身を切り落とす" },
+  { id: 26, q: "waste (  )", options: ["disposal", "disaster", "display", "discount"], correct: "disposal", m: "廃棄物処理" },
+  { id: 27, q: "the sweet (  ) of perfume", options: ["scent", "scene", "sense", "scale"], correct: "scent", m: "香水の甘い香り" },
+  { id: 28, q: "Japan's consumption of (  )", options: ["grain", "grade", "grant", "grace"], correct: "grain", m: "日本の穀物消費量" },
+  { id: 29, q: "Wheat is the chief (  ) in this area.", options: ["crop", "craft", "crew", "crowd"], correct: "crop", m: "小麦はこの地域の主な作物です。" },
+  { id: 30, q: "campaign against (  ) in the Amazon", options: ["deforestation", "definiton", "destruction", "decrease"], correct: "deforestation", m: "アマゾンの森林伐採に反対する運動を行う" },
+  { id: 31, q: "The village was hit by a severe (  ).", options: ["drought", "draft", "drift", "doubt"], correct: "drought", m: "その村は厳しい干ばつに見舞われた。" },
+  { id: 32, q: "water for (  )", options: ["irrigation", "irritation", "illusion", "imitation"], correct: "irrigation", m: "灌漑用水" },
+  { id: 33, q: "The doctor (  ) me that her life was not in danger.", options: ["assured", "assume", "assert", "assist"], correct: "assured", m: "医者は彼女の命に危険はないと私に保証してくれた。" },
+  { id: 34, q: "(  ) the method's efficiency", options: ["assess", "assign", "assist", "assemble"], correct: "assess", m: "その方法の効率を査定する" },
+  { id: 35, q: "Jim finally (  ) that my proposal might be better.", options: ["conceded", "concealed", "concerned", "concluded"], correct: "conceded", m: "私の提案のほうがよいかもしれないとジムはとうとう認めた。" },
+  { id: 36, q: "(  ) with him on this", options: ["compromise", "comply", "compose", "complain"], correct: "compromise", m: "この点で彼と妥協する" },
+  { id: 37, q: "I could not (  ) what had happened.", options: ["comprehend", "compensate", "compete", "complicate"], correct: "comprehend", m: "私は何が起きたのか理解できなかった。" },
+  { id: 38, q: "(  ) an ideal with reality", options: ["reconcile", "recognize", "recommend", "recover"], correct: "reconcile", m: "理想と現実との折り合いをつける" },
+  { id: 39, q: "(  ) good manners in children", options: ["instill", "inspire", "insist", "install"], correct: "instill", m: "子どもたちにマナーを教える" },
+  { id: 40, q: "We are (  ) to any possible danger.", options: ["alert", "alive", "alike", "alien"], correct: "alert", m: "私たちはどんな危険にも対処できるように用心している。" },
+  { id: 41, q: "(  ) science", options: ["cognitive", "collective", "creative", "critical"], correct: "cognitive", m: "認知科学" },
+  { id: 42, q: "rely on my (  )", options: ["intuition", "instruction", "intention", "institution"], correct: "intuition", m: "自分の直感に頼る" },
+  { id: 43, q: "make a (  ) never to smoke again", options: ["vow", "view", "voice", "volume"], correct: "vow", m: "二度とおたばこは吸わないと誓う" },
+  { id: 44, q: "have a terrible (  )", options: ["nightmare", "nursery", "notion", "noble"], correct: "nightmare", m: "ひどい悪夢を見る" },
+  { id: 45, q: "racial (  )", options: ["stereotypes", "statistics", "structures", "strategies"], correct: "stereotypes", m: "人種的固定観念" },
+  { id: 46, q: "Jessi is under the (  ) that he loves her.", options: ["illusion", "illustration", "immersion", "impression"], correct: "illusion", m: "ジェシーは彼が自分のことを愛しているという幻想を抱いている。" },
+  { id: 47, q: "the (  ) for judging wine", options: ["criteria", "critical", "crisis", "criminal"], correct: "criteria", m: "ワインを判断する基準" },
+  { id: 48, q: "capitalist (  )", options: ["ideology", "ideal", "identity", "idiom"], correct: "ideology", m: "資本主義のイデオロギー" },
+  { id: 49, q: "(  ) unfair treatment", options: ["tolerate", "torment", "torture", "total"], correct: "tolerate", m: "不当な扱いに耐える" },
+  { id: 50, q: "(  ) some important evidence", options: ["overlook", "overcome", "overtake", "oversea"], correct: "overlook", m: "ある大切な証拠を見落とす" },
+  { id: 51, q: "(  ) a good idea", options: ["conceive", "receive", "deceive", "perceive"], correct: "conceive", m: "よいアイデアを思いつく" },
+  { id: 52, q: "I am afraid you (  ) me.", options: ["misunderstand", "mislead", "misplace", "misfortune"], correct: "misunderstand", m: "君は私のことを誤解しているようだね。" },
+  { id: 53, q: "have a (  ) eye for talent", options: ["keen", "kind", "keenly", "key"], correct: "keen", m: "才能を見る（鋭い）目がある" },
+  { id: 54, q: "highly (  ) views", options: ["subjective", "objective", "subconscious", "subsequent"], correct: "subjective", m: "非常に主観的な見解" },
+  { id: 55, q: "(  ) fuel", options: ["fossil", "forest", "formal", "formula"], correct: "fossil", m: "化石燃料" },
+  { id: 56, q: "(  ) natural resources", options: ["exploit", "explore", "expand", "explain"], correct: "exploit", m: "天然資源を利用する" },
+  { id: 57, q: "fish (  ) with chemicals", options: ["contaminated", "contained", "continued", "contacted"], correct: "contaminated", m: "化学物質で汚染された魚" },
+  { id: 58, q: "(  ) at regular intervals", options: ["erupt", "corrupt", "interrupt", "abrupt"], correct: "erupt", m: "周期的に噴火する" },
+  { id: 59, q: "The lion (  ).", options: ["roared", "rolled", "roamed", "robbed"], correct: "roared", m: "ライオンがほえた。" },
+  { id: 60, q: "birds that (  ) New Zealand", options: ["inhabit", "inherit", "inhibit", "insist"], correct: "inhabit", m: "ニュージーランドに生息する鳥" },
+  { id: 61, q: "(  ) new industries", options: ["nurture", "nature", "native", "nation"], correct: "nurture", m: "新たな産業を育む" },
+  { id: 62, q: "(  ) sleep by day and hunt by night.", options: ["Owls", "Ostrich", "Eagle", "Hawk"], correct: "Owls", m: "フクロウは昼に眠って、夜に狩りをする。" },
+  { id: 63, q: "Birds learn to fly by (  ).", options: ["instinct", "insight", "instance", "instant"], correct: "instinct", m: "鳥は本能的に飛び方を習得する。" },
+  { id: 64, q: "Zebras sometimes fall (  ) to lions.", options: ["prey", "pray", "press", "price"], correct: "prey", m: "シマウマはライオンの餌食になることがある。" },
+  { id: 65, q: "study human (  )", options: ["anatomy", "analogy", "ancestor", "analysis"], correct: "anatomy", m: "解剖学を勉強する" },
+  { id: 66, q: "Whales are classified as (  ).", options: ["mammals", "monsters", "minerals", "members"], correct: "mammals", m: "クジラは哺乳類に分類されている。" },
+  { id: 67, q: "marine (  )", options: ["predators", "protectors", "producers", "patients"], correct: "predators", m: "海洋捕食動物" },
+  { id: 68, q: "A mule is a (  ) of a horse and a donkey.", options: ["hybrid", "habit", "habitat", "harbor"], correct: "hybrid", m: "ラバは馬とロバの交配種である。" },
+  { id: 69, q: "suffer a fractured (  )", options: ["skull", "skill", "scale", "skeleton"], correct: "skull", m: "頭蓋骨を骨折する" },
+  { id: 70, q: "a (  ) dealer", options: ["timber", "tissue", "timberland", "target"], correct: "timber", m: "材木商" },
+  { id: 71, q: "weave (  )", options: ["textiles", "textures", "texts", "taxies"], correct: "textiles", m: "織物を織る" },
+  { id: 72, q: "sweat-absorbing (  )", options: ["fabric", "factory", "faculty", "facility"], correct: "fabric", m: "汗を吸収しやすい布地" },
+  { id: 73, q: "a cotton (  )", options: ["mill", "mile", "mind", "mine"], correct: "mill", m: "紡績工場" },
+  { id: 74, q: "(  ) fabric from wool", options: ["weave", "wave", "waste", "warn"], correct: "weave", m: "羊毛から布地を織る" }
+];
+
+let currentUser = null;
+let userData = JSON.parse(localStorage.getItem('eng_app_users') || '{}');
+
+let currentTest = [];
+let currentIndex = 0;
+let score = 0;
+
+function saveUserData() {
+  localStorage.setItem('eng_app_users', JSON.stringify(userData));
+}
+
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ログイン画面
+function showLoginScreen() {
+  currentUser = null;
+  const userNames = Object.keys(userData);
+  
+  document.getElementById("app").innerHTML = `
+    <div class="card">
+      <h3 style="margin-top:0;">アカウントを選択 / 新規作成</h3>
+      <div class="input-group">
+        <input type="text" id="usernameInput" placeholder="名前を入力してください">
+      </div>
+      <button class="main-btn" onclick="login()">ログイン / アカウント作成</button>
+      
+      ${userNames.length > 0 ? `
+        <div class="user-list">
+          <p style="font-size:0.85em; color:#666; font-weight:bold; margin-bottom:8px;">作成済みのアカウント:</p>
+          ${userNames.map(name => `
+            <span class="user-chip" onclick="quickLogin('${name}')">${name}</span>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function login() {
+  const name = document.getElementById("usernameInput").value.trim();
+  if (!name) return alert("名前を入力してください");
+  if (!userData[name]) {
+    userData[name] = { wrongIds: [] };
+    saveUserData();
+  }
+  currentUser = name;
+  showMenuScreen();
+}
+
+function quickLogin(name) {
+  currentUser = name;
+  showMenuScreen();
+}
+
+// メニュー画面
+function showMenuScreen() {
+  const wrongCount = userData[currentUser].wrongIds.length;
+
+  document.getElementById("app").innerHTML = `
+    <div class="user-bar">
+      <span>👤 ユーザー: ${currentUser}</span>
+      <button class="logout-btn" onclick="showLoginScreen()">切替</button>
+    </div>
+    
+    <div class="card" style="text-align:center;">
+      <h3>メニュー</h3>
+      <p style="color:#666; font-size:0.9em; margin-bottom:20px;">
+        間違えた問題の登録数: <strong>${wrongCount}</strong> 問
+      </p>
+      
+      <button class="main-btn" onclick="startTest('normal')">🚀 20問テスト (4択10問 ＋ 記述10問)</button>
+      <button class="main-btn review-btn" onclick="startTest('review')" ${wrongCount === 0 ? 'disabled' : ''}>
+        🔥 間違えた問題のみ復習 (${wrongCount}問)
+      </button>
+    </div>
+  `;
+}
+
+// テスト開始処理
+function startTest(mode) {
+  let list = [];
+  if (mode === 'normal') {
+    const selected = shuffle(allQuestions).slice(0, 20);
+    // 前半10問を4択(mcq)、後半10問を記述(text)に設定
+    list = selected.map((q, idx) => ({
+      ...q,
+      type: idx < 10 ? 'mcq' : 'text'
+    }));
+  } else {
+    const wrongIds = userData[currentUser].wrongIds;
+    const wrongQuestions = shuffle(allQuestions.filter(q => wrongIds.includes(q.id)));
+    const half = Math.ceil(wrongQuestions.length / 2);
+    list = wrongQuestions.map((q, idx) => ({
+      ...q,
+      type: idx < half ? 'mcq' : 'text'
+    }));
+  }
+
+  currentTest = list;
+  currentIndex = 0;
+  score = 0;
+  renderQuestion();
+}
+
+// 問題表示
+function renderQuestion() {
+  const app = document.getElementById("app");
+
+  if (currentIndex >= currentTest.length) {
+    app.innerHTML = `
+      <div class="card" style="text-align:center;">
+        <h3>テスト完了！</h3>
+        <p style="font-size:1.2em; margin:15px 0;">スコア: <strong>${score} / ${currentTest.length}</strong></p>
+        <button class="main-btn" onclick="showMenuScreen()">メニューに戻る</button>
+      </div>
+    `;
+    return;
+  }
+
+  const q = currentTest[currentIndex];
+  const isMcq = q.type === 'mcq';
+
+  app.innerHTML = `
+    <div class="user-bar">
+      <span>👤 ${currentUser}</span>
+      <span>${currentIndex + 1} / ${currentTest.length} 問目</span>
+    </div>
+    
+    <div class="card">
+      <div class="meta-info">
+        <span>問題 ID: No.${q.id}</span>
+        <span class="type-badge ${isMcq ? 'badge-mcq' : 'badge-text'}">
+          ${isMcq ? '4択問題' : '記述式問題'}
+        </span>
+      </div>
+      <div class="question-text">${q.q}</div>
+
+      ${isMcq ? renderMcqOptions(q) : renderTextInput()}
+
+      <div id="resultArea"></div>
+      <button id="nextBtn" class="main-btn" style="display:none;" onclick="nextQuestion()">次の問題へ</button>
+    </div>
+  `;
+
+  if (!isMcq) {
+    const textInput = document.getElementById("textAnswerInput");
+    if (textInput) {
+      textInput.focus();
+      textInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") checkTextAnswer();
+      });
+    }
+  }
+}
+
+// 4択ボタンの生成
+function renderMcqOptions(q) {
+  const shuffledOpts = shuffle(q.options);
+  return `
+    <div class="options-grid">
+      ${shuffledOpts.map(opt => `
+        <button class="option-btn" onclick="checkMcqAnswer('${opt.replace(/'/g, "\\'")}')">${opt}</button>
+      `).join('')}
+    </div>
+  `;
+}
+
+// 記述入力欄の生成
+function renderTextInput() {
+  return `
+    <div class="text-input-group">
+      <input type="text" id="textAnswerInput" class="text-input" placeholder="英単語を入力..." autocomplete="off">
+      <button id="submitBtn" class="submit-btn" onclick="checkTextAnswer()">解答</button>
+    </div>
+  `;
+}
+
+// 4択判定
+function checkMcqAnswer(selectedOpt) {
+  const q = currentTest[currentIndex];
+  const buttons = document.querySelectorAll('.option-btn');
+
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    if (btn.innerText === q.correct) {
+      btn.style.backgroundColor = '#d1fae5';
+      btn.style.borderColor = '#10b981';
+      btn.style.color = '#065f46';
+    } else if (btn.innerText === selectedOpt && selectedOpt !== q.correct) {
+      btn.style.backgroundColor = '#fee2e2';
+      btn.style.borderColor = '#ef4444';
+      btn.style.color = '#991b1b';
+    }
+  });
+
+  processResult(selectedOpt === q.correct, selectedOpt);
+}
+
+// 記述判定
+function checkTextAnswer() {
+  const inputEl = document.getElementById("textAnswerInput");
+  const submitBtn = document.getElementById("submitBtn");
+  if (!inputEl || inputEl.disabled) return;
+
+  const userAns = inputEl.value.trim();
+  const q = currentTest[currentIndex];
+
+  inputEl.disabled = true;
+  submitBtn.disabled = true;
+
+  // 大文字小文字の違いを許容して判定
+  const isCorrect = userAns.toLowerCase() === q.correct.toLowerCase();
+  processResult(isCorrect, userAns);
+}
+
+// 判定共通処理
+function processResult(isCorrect, userAns) {
+  const q = currentTest[currentIndex];
+  const resultArea = document.getElementById("resultArea");
+  const nextBtn = document.getElementById("nextBtn");
+  const userWrongIds = userData[currentUser].wrongIds;
+
+  if (isCorrect) {
+    score++;
+    const idx = userWrongIds.indexOf(q.id);
+    if (idx > -1) {
+      userWrongIds.splice(idx, 1);
+      saveUserData();
+    }
+    
+    resultArea.innerHTML = `
+      <div class="result-box correct-res">
+        ⭕ 正解！
+        <div class="meaning-text">訳: ${q.m}</div>
+      </div>
+    `;
+  } else {
+    if (!userWrongIds.includes(q.id)) {
+      userWrongIds.push(q.id);
+      saveUserData();
+    }
+
+    resultArea.innerHTML = `
+      <div class="result-box incorrect-res">
+        ❌ 不正解... (正解: <strong>${q.correct}</strong> ${userAns ? `/ あなたの入力: ${userAns}` : ''})
+        <div class="meaning-text">訳: ${q.m}</div>
+      </div>
+    `;
+  }
+
+  nextBtn.style.display = "block";
+}
+
+function nextQuestion() {
+  currentIndex++;
+  renderQuestion();
+}
+
+// 初期化
+showLoginScreen();
+</script>
+
+</body>
+</html>
